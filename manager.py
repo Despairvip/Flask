@@ -1,6 +1,4 @@
 # -*- coding:utf-8 -*-
-from flask import Flask, session
-from flask_sqlalchemy import SQLAlchemy
 
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
