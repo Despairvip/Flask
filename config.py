@@ -24,3 +24,19 @@ class Config():
     SESSION_USER_SINGER = True  # 让session中的session_id 加密传输
     SESSION_REDIS = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
     PERMANENT_SESSION_LIFETIME = 86400  # 设置session的过期时间
+
+
+class DevelopmentConfig(Config):
+    """开发模式下的配置"""
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    """生产模式下的配置"""
+    pass
+
+
+config_dict = {
+    "development": DevelopmentConfig,
+    "production": ProductionConfig
+}
