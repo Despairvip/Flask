@@ -12,10 +12,6 @@ class Config():
     REDIS_PORT = 6379
 
     '''配置数据库信息'''
-    # 数据库的配置信息
-    # SQLALCHEMY_DATABASE_URI = "mysql://root:mysql@127.0.0.1:3306/flask"
-    # SQLALCHEMY_TRACK_MODIFICATIONS = False
-
     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@127.0.0.1:3306/flask'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

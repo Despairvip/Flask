@@ -10,6 +10,8 @@ from flask_session import Session
 from config import config_dict
 
 # 数据库
+from i_home.utils.common import RegexConverter
+
 db = SQLAlchemy()
 # 全局可用的redis
 redis_store = None
@@ -38,4 +40,12 @@ def create_app(config):
     global redis_store
     redis_store = redis.StrictRedis(host=config_dict[config].REDIS_HOST, port=config_dict[config].REDIS_PORT)
     Session(app)
+
+    # 添加自定义的正则转换器
+    app.url_map.converters["re"] = RegexConverter
+
+    # 注册静态页面蓝图
+    from web_html import html
+    app.register_blueprint(html)
+
     return app
