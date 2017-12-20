@@ -48,4 +48,8 @@ def create_app(config):
     from web_html import html
     app.register_blueprint(html)
 
+    # 注册api蓝图
+    from api_1_0 import api
+    app.register_blueprint(api, url_prefix='/api/v1.0')
+
     return app
