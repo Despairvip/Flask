@@ -2,4 +2,5 @@
 from flask import Blueprint
 
 api = Blueprint("api_1_0", __name__)
-from . import verify
+from i_home.api_1_0 import vreify
+

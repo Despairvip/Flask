@@ -16,7 +16,7 @@ class Config():
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     '''配置session'''
-    SESSION_TYPE = redis  # 指定session存储位置
+    SESSION_TYPE = "redis"  # 指定session存储位置
     SESSION_USER_SINGER = True  # 让session中的session_id 加密传输
     SESSION_REDIS = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
     PERMANENT_SESSION_LIFETIME = 86400  # 设置session的过期时间
