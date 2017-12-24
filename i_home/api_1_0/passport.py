@@ -11,6 +11,39 @@ from i_home.models import User
 from i_home.utils.response_code import RET
 
 
+# 用户登录
+@api.route('/session', methods=["POST"])
+def login():
+    # 获取前端参数
+    data = request.json
+    mobile = data.get("mobile")
+    password = data.get("password")
+    # 检验参数
+    if not all([mobile, password]):
+        return jsonify(errno=RET.DATAERR, errmsg="数据错误")
+
+    # 根据电话号码查找数据库
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询错误")
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg="用户未注册")
+
+    if not user.check_passowrd(password):
+        return jsonify(errno=RET.PWDERR, errmsg="密码错误")
+
+    # 保存状态
+    session['user_id'] = user.id
+    session['name'] = mobile
+    session['mobile'] = mobile
+
+    return jsonify(errno=RET.OK, errmsg="登录成功")
+
+
+
+# 用户注册
 @api.route("/user", methods=["POST"])
 def register():
     # 获取参数
