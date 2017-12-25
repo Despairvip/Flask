@@ -11,6 +11,15 @@ from i_home.models import User
 from i_home.utils.response_code import RET
 
 
+@api.route("/session", methods=['DELETE'])
+def logout():
+    session.pop('user_id', None)
+    session.pop('user', None)
+    session.pop('mobile', None)
+
+    return jsonify(errno=RET.OK, errmsg="OK")
+
+
 @api.route('/session')
 def check_login():
     user_id = session.get('user_id')
@@ -18,7 +27,7 @@ def check_login():
     if not all([user_id, name]):
         return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
 
-    return  jsonify(errno=RET.OK, errmsg="OK", data={"name":name})
+    return jsonify(errno=RET.OK, errmsg="OK", data={"name": name})
 
 
 # 用户登录
@@ -50,7 +59,6 @@ def login():
     session['mobile'] = mobile
 
     return jsonify(errno=RET.OK, errmsg="登录成功")
-
 
 
 # 用户注册
