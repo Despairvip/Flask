@@ -11,6 +11,16 @@ from i_home.models import User
 from i_home.utils.response_code import RET
 
 
+@api.route('/session')
+def check_login():
+    user_id = session.get('user_id')
+    name = session.get("name")
+    if not all([user_id, name]):
+        return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
+
+    return  jsonify(errno=RET.OK, errmsg="OK", data={"name":name})
+
+
 # 用户登录
 @api.route('/session', methods=["POST"])
 def login():
