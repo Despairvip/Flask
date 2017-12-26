@@ -12,6 +12,53 @@ from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
 
 
+@api.route("/user/auth")
+@login_session_check
+def see_verified():
+    user_id = g.user_id
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询错误")
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg="用户不存在")
+
+    return jsonify(errno=RET.OK, errmsg="OK", data=user.to_auth_info())
+
+
+@api.route('/user/auth', methods=['POST'])
+@login_session_check
+def verified():
+    data = request.json
+    real_name = data.get('real_name')
+    id_card = data.get('id_card')
+
+    if not all([real_name, id_card]):
+        return jsonify(errno=RET.DATAERR, errmsg="数据错误")
+    user_id = g.user_id
+
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="用户不存在")
+
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg="用户不存在")
+    user.real_name = real_name
+    user.id_card = id_card
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="存储失败")
+
+    return jsonify(errno=RET.OK, errmsg="OK")
+
+
 @api.route("/user/name", methods=["POST"])
 @login_session_check
 def change_name():
