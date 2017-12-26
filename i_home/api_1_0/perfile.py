@@ -12,6 +12,41 @@ from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
 
 
+@api.route("/user/name", methods=["POST"])
+@login_session_check
+def change_name():
+    new_name = request.json.get("name")
+    user_id = g.user_id
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据读取错误")
+    user.name = new_name
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.sessiom.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="存储失败")
+    return jsonify(errno=RET.OK, errmsg="修改成功")
+
+
+@api.route("/user")
+@login_session_check
+def user_center():
+    # 判断用户是否登录
+    # 根据用户id从数据库中获取数据
+    user_id = g.user_id
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="获取数据失败")
+
+    return jsonify(errno=RET.OK, errmsg="OK", data=user.to_dict())
+
+
 @api.route("/user/avatar", methods=['POST'])
 @login_session_check
 def save_avatar():
