@@ -2,14 +2,43 @@
 from flask import current_app, jsonify
 from flask import g
 from flask import request
+from flask import session
 
 from i_home import redis_store, db
 from i_home.api_1_0 import api
-from i_home.constants import AREA_INFO_REDIS_EXPIRES, QINIU_DOMIN_PREFIX
+from i_home.constants import AREA_INFO_REDIS_EXPIRES, QINIU_DOMIN_PREFIX, HOUSE_DETAIL_REDIS_EXPIRE_SECOND
 from i_home.models import Area, House, Facility, HouseImage
 from i_home.utils.image_storage import storage_image
 from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
+
+
+@api.route("/houses/<int:house_id>")
+def detail_house_info(house_id):
+    user_id = session.get("user_id", -1)
+
+    try:
+        house_dict = redis_store.get(("house_detail_%d" % house_id))
+        if house_dict:
+            return jsonify(errno=RET.OK, errmsg="ok", data={"user_id": user_id, "house": house_dict})
+    except Exception as e:
+        current_app.logger.error(e)
+
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="获取数据失败")
+    if not house:
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+    house_dict = house.to_full_dict()
+
+    try:
+        redis_store.set(("house_detail_%d") % house_id, house_dict, HOUSE_DETAIL_REDIS_EXPIRE_SECOND)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    return jsonify(errno=RET.OK, errmsg="0", data={"house": house_dict, "user_id": user_id})
 
 
 @api.route("/houses/<int:house_id>/images", methods=['POST'])
