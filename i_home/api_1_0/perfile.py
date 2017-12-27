@@ -12,22 +12,7 @@ from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
 
 
-@api.route("/user/auth")
-@login_session_check
-def see_verified():
-    user_id = g.user_id
-    try:
-        user = User.query.get(user_id)
-    except Exception as e:
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="查询错误")
-    if not user:
-        return jsonify(errno=RET.USERERR, errmsg="用户不存在")
-
-    return jsonify(errno=RET.OK, errmsg="OK", data=user.to_auth_info())
-
-
-@api.route('/user/auth', methods=['POST'])
+@api.route('/user/auth', methods=['GET', 'POST'])
 @login_session_check
 def verified():
     data = request.json
@@ -56,7 +41,7 @@ def verified():
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="存储失败")
 
-    return jsonify(errno=RET.OK, errmsg="OK")
+    return jsonify(errno=RET.OK, errmsg="OK", data=user.to_auth_info())
 
 
 @api.route("/user/name", methods=["POST"])
