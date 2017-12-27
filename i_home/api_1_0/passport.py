@@ -24,10 +24,7 @@ def logout():
 def check_login():
     user_id = session.get('user_id')
     name = session.get("name")
-    if not all([user_id, name]):
-        return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
-
-    return jsonify(errno=RET.OK, errmsg="OK", data={"name": name})
+    return jsonify(errno=RET.OK, errmsg="OK", data={"name": name, "user_id":user_id})
 
 
 # 用户登录
