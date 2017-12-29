@@ -16,17 +16,37 @@ from i_home.utils.response_code import RET
 
 @api.route("/houses")
 def get_house_list():
+    data = request.args
+    p = data.get("p", "1")
+    sk = data.get("sk", "new")
+
     try:
-        houses = House.query.all()
+        houses_query = House.query
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据获取失败")
 
+    # 添加排序逻辑
+    if sk == "booking":
+        houses_query = houses_query.order_by(House.order_count.desc())
+    elif sk == "price-inc":
+        houses_query = houses_query.order_by(House.price)
+    elif sk == "price-des":
+        houses_query = houses_query.order_by(House.price.desc())
+    else:
+        houses_query = houses_query.order_by(House.create_time.desc())
+
+    # 添加排序逻辑
+
+    paginate = houses_query.paginate(int(p), HOUSE_LIST_PAGE_CAPACITY, False)
+    # 总页数
+    total_page = paginate.pages
+    # 获取当前页的数据
+    houses = paginate.items
     house_dict = []
     for house in houses:
         house_dict.append(house.to_basic_dict())
-    return jsonify(errno=RET.OK, errmsg="OK", data={"houses":house_dict, "total_page": 1})
-
+    return jsonify(errno=RET.OK, errmsg="OK", data={"houses": house_dict, "total_page": total_page})
 
 
 @api.route("/houses/index")
