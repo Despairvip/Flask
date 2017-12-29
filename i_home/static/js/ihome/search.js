@@ -4,6 +4,7 @@ var total_page = 1;  // 总页数
 var house_data_querying = true;   // 是否正在向后台获取数据
 
 // 解析url中的查询字符串
+// https://www.baidu.com/index/index.html?name=aaa
 function decodeQuery(){
     var search = decodeURI(document.location.search);
     return search.replace(/(^\?)/, '').split('&').reduce(function(result, item){
@@ -42,9 +43,31 @@ function updateHouseData(action) {
         sd:startDate,
         ed:endDate,
         sk:sortKey,
-        p:next_page
+        p:next_page // 1 > 2 > 2
     };
-    // TODO: 获取房屋列表信息
+    // 获取房屋列表信息
+
+    $.get("/api/v1.0/houses", params, function (resp) {
+        // 将正在加载数据的标志设置为false
+        house_data_querying = false;
+        if (resp.errno == "0") {
+            // 显示数据
+            total_page = resp.data.total_page
+            if (total_page == 0) {
+                $(".house-list").html("未查询到数据")
+            }else {
+                // 为什么要给cur_page赋值
+                cur_page = next_page
+                if (action == "renew") {
+                    // 代表是重新加载数据，直接设置html
+                    $(".house-list").html(template("house-list-tmpl", {"houses": resp.data.houses}))
+                }else {
+                    // 代表是加载后面几页，需要将后面的数据拼接到当前数据上
+                    $(".house-list").append(template("house-list-tmpl", {"houses": resp.data.houses}))
+                }
+            }
+        }
+    })
 }
 
 $(document).ready(function(){

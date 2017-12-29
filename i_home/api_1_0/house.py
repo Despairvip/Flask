@@ -7,11 +7,26 @@ from flask import session
 from i_home import redis_store, db
 from i_home.api_1_0 import api
 from i_home.constants import AREA_INFO_REDIS_EXPIRES, QINIU_DOMIN_PREFIX, HOUSE_DETAIL_REDIS_EXPIRE_SECOND, \
-    HOME_PAGE_MAX_HOUSES, HOME_PAGE_DATA_REDIS_EXPIRES
+    HOME_PAGE_MAX_HOUSES, HOME_PAGE_DATA_REDIS_EXPIRES, HOUSE_LIST_PAGE_CAPACITY
 from i_home.models import Area, House, Facility, HouseImage
 from i_home.utils.image_storage import storage_image
 from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
+
+
+@api.route("/houses")
+def get_house_list():
+    try:
+        houses = House.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据获取失败")
+
+    house_dict = []
+    for house in houses:
+        house_dict.append(house.to_basic_dict())
+    return jsonify(errno=RET.OK, errmsg="OK", data={"houses":house_dict, "total_page": 1})
+
 
 
 @api.route("/houses/index")
