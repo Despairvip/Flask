@@ -19,22 +19,34 @@ def get_house_list():
     data = request.args
     p = data.get("p", "1")
     sk = data.get("sk", "new")
+    aid = data.get("aid", "")
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DATAERR, errmsg="参数错误")
+
 
     try:
         houses_query = House.query
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据获取失败")
+    filters =[]
+    if aid:
+        filters.append(House.area_id == aid)
+
+
 
     # 添加排序逻辑
     if sk == "booking":
-        houses_query = houses_query.order_by(House.order_count.desc())
+        houses_query = houses_query.filter(*filters).order_by(House.order_count.desc())
     elif sk == "price-inc":
-        houses_query = houses_query.order_by(House.price)
+        houses_query = houses_query.filter(*filters).order_by(House.price)
     elif sk == "price-des":
-        houses_query = houses_query.order_by(House.price.desc())
+        houses_query = houses_query.filter(*filters).order_by(House.price.desc())
     else:
-        houses_query = houses_query.order_by(House.create_time.desc())
+        houses_query = houses_query.filter(*filters).order_by(House.create_time.desc())
 
     # 添加排序逻辑
 
