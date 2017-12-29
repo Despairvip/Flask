@@ -3,12 +3,12 @@ from flask import current_app, jsonify
 from flask import g
 from flask import request
 from flask import session
-
+import datetime
 from i_home import redis_store, db
 from i_home.api_1_0 import api
 from i_home.constants import AREA_INFO_REDIS_EXPIRES, QINIU_DOMIN_PREFIX, HOUSE_DETAIL_REDIS_EXPIRE_SECOND, \
     HOME_PAGE_MAX_HOUSES, HOME_PAGE_DATA_REDIS_EXPIRES, HOUSE_LIST_PAGE_CAPACITY
-from i_home.models import Area, House, Facility, HouseImage
+from i_home.models import Area, House, Facility, HouseImage, Order
 from i_home.utils.image_storage import storage_image
 from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
@@ -20,6 +20,22 @@ def get_house_list():
     p = data.get("p", "1")
     sk = data.get("sk", "new")
     aid = data.get("aid", "")
+    start_date_str = data.get("sd", "")
+    end_date_str = data.get("ed", "")
+
+    start_date = None
+    end_date =None
+    try:
+        if start_date_str:
+            start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d")
+        if end_date_str:
+            end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
+        if start_date_str and end_date_str:
+            assert start_date < end_date, Exception("结束时间必须大于开始时间")
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DATAERR, errmsg="参数错误")
+
     try:
         p = int(p)
     except Exception as e:
@@ -36,6 +52,17 @@ def get_house_list():
     if aid:
         filters.append(House.area_id == aid)
 
+    # 添加日期过滤条件
+    orders_ordering = None
+    if start_date and end_date:
+        orders_ordering = Order.query.filter(Order.end_date > start_date, Order.begin_date<end_date).all()
+    if start_date:
+        orders_ordering = Order.query.filter(Order.end_date > start_date).all()
+    if end_date:
+        orders_ordering = Order.query.filter(Order.end_date < end_date).all()
+    if orders_ordering:
+        error_house_id = [order.house_id for order in orders_ordering]
+        filters.append(House.id.notin_(error_house_id))
 
 
     # 添加排序逻辑
