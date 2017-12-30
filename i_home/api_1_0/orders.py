@@ -11,6 +11,35 @@ from i_home.utils.common import login_session_check
 from i_home.utils.response_code import RET
 
 
+@api.route("/user/orders")
+@login_session_check
+def get_orders_list():
+    user_id = g.user_id
+    role = request.args.get("role")
+    if not role:
+        return jsonify(errno=RET.DATAERR, errmsg="参数错误")
+    if role not in ("custom", "landlord"):
+        return jsonify(errno=RET.DATAERR, errmsg="参数错误")
+    # 判断时房东还是房客
+    try:
+        if role == "custom":
+            orders = Order.query.filter(Order.user_id == user_id).order_by(Order.create_time.desc()).all()
+        elif role == "landlord":
+            # 查询当前用户所有房源
+            houses = House.query.filer(House.user_id == user_id).all()
+            house_ids = [house.id for house in houses]
+            # 查询所有房间的订单
+            orders = Order.query.filter(Order.house_id.in_(house_ids)).order_by(Order.create_time.desc()).all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DATAERR, errmsg="参数错误")
+    order_dict = []
+    for order in orders:
+        order_dict.append(order.to_dict())
+
+    return jsonify(errno=RET.OK, errmsg="Ok", data={'orders': order_dict})
+
+
 @api.route("/orders", methods=["POST"])
 @login_session_check
 def get_new_orders():
